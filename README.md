@@ -47,7 +47,17 @@ make -C /lib/modules/5.16.0-12parrot1-amd64/build M=$PWD modules
 make -C /lib/modules/5.16.0-12parrot1-amd64/build M=$PWD clean
 ```
 
-## Linux kernel build steps
+## Beaglebone
+
+### Toolchain
+
+Downloaded either from package manager or from [arm-Developer page](https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/gnu-a/downloads).
+
+Required version: _arm-linux-gnueabihf_.
+
+## Linux kernel build steps (on BeagleBoard example)
+
+__Warning:__ These steps base on https://github.com/beagleboard/linux branch 4.14
 
 __STEP 1:__
 ```bash
@@ -64,6 +74,9 @@ __STEP 2:__
 
 make ARCH=arm bb.org_defconfig
 ```
+
+__Warning:__ This is valid only for branch 4.14 (and maybe some others) but not for the newer ones.
+Newer kernel source code doesn't have the _bb.org_defconfig_ config file, therefore this won't work anymore.
 
 __STEP 3:__
 ```bash
