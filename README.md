@@ -68,6 +68,26 @@ config DRIVER_NAME_IN_MENUCONFIG
 endmenu
 ```
 
+## Tools
+
+- `udevadm`
+
+## Kernel APIs for drivers
+
+- `alloc_chrdev_region()` - create device number
+- `unregister_chrdev_region()`
+- `cdev_init()`, `cdev_add()` - make a char device registration with the VFS
+- `cdev_del()`
+- `class_create()`, `device_create()` - create device files
+- `class_destroy()`, `device_destroy()`
+
+### printk priorities
+
+The default priorities can be setup in `menuconfig` before kernel compilation.
+In runtime it can be setup by overwriting `/proc/sys/kernel/printk` file, e.g. we can change the console log level
+to 6 by `echo 6 > /proc/sys/kernel/printk`. Message from `printk` will be printed on a console when `printk`
+priority is lower than current console log level.
+
 ## Beaglebone
 
 ### Toolchain
