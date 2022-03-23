@@ -47,6 +47,27 @@ make -C /lib/modules/5.16.0-12parrot1-amd64/build M=$PWD modules
 make -C /lib/modules/5.16.0-12parrot1-amd64/build M=$PWD clean
 ```
 
+### Intree module building
+
+1. Download Linux Kernel source
+2. Create a new folder in `drivers/<type_of_driver>/<driver_name>`, e.g. `drivers/char/my_c_dev/`
+3. Copy source code into the directory
+4. If you want your module to be visible in the `menuconfig` you should deliver also `Kconfig` file in the driver directory
+5. Add the local Kconfig entry to upper level Kconfig, e.g. `source "drivers/char/my_c_dev/Kconfig`
+6. Create local Makefile
+7. Create `obj-$(config_item) += <module_name.o>`
+    Because we do not know what config was chosen (m|n|y), we can use config name preceeded with CONFIG keyword, e.g. `obj-$(CONFIG_DRIVER_NAME_IN_MENUCONFIG) += main.o`
+8. Add the local level Makefile into the upper level Makefile `obj-<config [y|m|n]> += <driver_path>`, e.g. `obj-y += my_c_dev`. __Note__: when config used `y`, then the folder will be always enabled (not the module itself, but the folder).
+
+__Kconfig example__:
+```
+menu "Menu entry header description"
+config DRIVER_NAME_IN_MENUCONFIG
+    tristate "Short description of the module"
+    default [n|m|y]
+endmenu
+```
+
 ## Beaglebone
 
 ### Toolchain
