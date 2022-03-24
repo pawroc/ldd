@@ -88,6 +88,28 @@ In runtime it can be setup by overwriting `/proc/sys/kernel/printk` file, e.g. w
 to 6 by `echo 6 > /proc/sys/kernel/printk`. Message from `printk` will be printed on a console when `printk`
 priority is lower than current console log level.
 
+### File operations
+
+These are represented by `struct file`.
+
+#### open
+
+This operation creates `struct file` in the kernel space for each opened file descriptor.
+Each call to `open` increments `f_count`.
+
+#### release
+
+This callback is issued when the last `close` is called. It means that the callback
+is called only when `f_count` becomes 0.
+
+#### read / write
+
+In the prototype, there is an `__user` macro used. This macro is used to signal that the variable
+that it corresponds to is a user space data which kernel shouldn't trust, e.g. pointer - it shouldn't
+be dereferenced directly, but `copy_to_user` / `copy_from_user` should be used instead.
+
+When `__user` macro is used, it is detected by `sparse` tool (GCC doesn't detect any errors).
+
 ## Beaglebone
 
 ### Toolchain
