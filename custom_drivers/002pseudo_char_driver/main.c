@@ -89,7 +89,14 @@ static int __init pcd_driver_init(void)
 
 static void __exit pcd_driver_cleanup(void)
 {
-    // unregister_chrdev_region(device_number);
+    /* The order of cleanup functions have to be in reverse order
+       to the initialization */
+    device_destroy(class_pcd, device_number);
+    class_destroy(class_pcd);
+    cdev_del(&pcd_cdev);
+    unregister_chrdev_region(device_number, 1);
+
+    pr_info("Module unloaded\n");
 }
 
 module_init(pcd_driver_init);
