@@ -88,6 +88,14 @@ In runtime it can be setup by overwriting `/proc/sys/kernel/printk` file, e.g. w
 to 6 by `echo 6 > /proc/sys/kernel/printk`. Message from `printk` will be printed on a console when `printk`
 priority is lower than current console log level.
 
+### printk format customization
+
+User can define its own `pr_fmt` macro, e.g.
+
+```c
+#define pr_fmt(fmt) "%s:" fmt,  __func__
+```
+
 ### File operations
 
 These are represented by `struct file`.

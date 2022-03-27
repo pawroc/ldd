@@ -6,6 +6,11 @@
 
 #define DEV_MEM_SIZE 512
 
+#ifdef pr_fmt
+#undef pr_fmt
+#endif
+#define pr_fmt(fmt) "%s:" fmt,  __func__
+
 /* pseudo device's memory */
 char device_buffer[DEV_MEM_SIZE];
 
@@ -15,26 +20,31 @@ struct cdev pcd_cdev;
 
 loff_t pcd_lseek(struct file *filp, loff_t offset, int whence)
 {
+    pr_info("lseek requested\n");
     return 0;
 }
 
 ssize_t pcd_read(struct file *filp, char __user *buff, size_t count, loff_t * pos)
 {
+    pr_info("read requested for %zu bytes\n", count);
     return 0;
 }
 
 ssize_t pcd_write(struct file *filp, const char __user *buff, size_t count, loff_t *pos)
 {
+    pr_info("write requested for %zu bytes\n", count);
     return 0;
 }
 
 int pcd_open(struct inode *inode, struct file *filp)
 {
+    pr_info("open was succesfull\n");
     return 0;
 }
 
 int pcd_release(struct inode *inode, struct file *filp)
 {
+    pr_info("release was succesfull\n");
     return 0;
 }
 
