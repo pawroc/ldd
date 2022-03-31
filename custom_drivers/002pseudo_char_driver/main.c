@@ -99,6 +99,7 @@ ssize_t pcd_write(struct file *filp, const char __user *buff, size_t count, loff
 
     if (!count)
     {
+        pr_err("No space left on the device");
         return -ENOMEM;
     }
 

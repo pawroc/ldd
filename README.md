@@ -72,6 +72,12 @@ endmenu
 
 - `udevadm`
 
+## Testing from a SHELL
+
+- Writing into the driver - `echo "Message" > /dev/<driver>`, e.g. `echo "Hello" > /dev/pcd`
+- Reading from the driver - `cat /dev/<driver>`, e.g. `cat /dev/pcd`
+- Copying the file into the driver - `cp <file> /dev/<driver>`, e.g. `cp /tmp/file /dev/pcd`
+
 ## Kernel APIs for drivers
 
 - `alloc_chrdev_region()` - create device number
