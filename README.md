@@ -81,7 +81,7 @@ endmenu
 ## Kernel APIs for drivers
 
 - `alloc_chrdev_region()` - create device number
-- `unregister_chrdev_region()`
+- `unregister_chrdev_region()`. This allows to allocate device and assigne a device_number to it. It is allowed to allocate multiple devices at once, e.g. `alloc_chrdev_region(&device_number, 0, NO_OF_DEVICES, "pcd_devices")` - it allocates `NO_OF_DEVICES` devices and saves first number into `device_number`. Using any other device is allowed by merging MAJOR and MINOR numbers.
 - `cdev_init()`, `cdev_add()` - make a char device registration with the VFS
 - `cdev_del()`
 - `class_create()`, `device_create()` - create device files
