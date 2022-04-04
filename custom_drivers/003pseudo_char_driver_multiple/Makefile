@@ -1,4 +1,5 @@
 obj-m := pcd_n.o
+# ccflags-m := -std=gnu99
 
 ARCH=arm
 CROSS_COMPILE=arm-linux-gnueabihf-

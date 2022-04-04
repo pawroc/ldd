@@ -111,6 +111,8 @@ These are represented by `struct file`.
 This operation creates `struct file` in the kernel space for each opened file descriptor.
 Each call to `open` increments `f_count`.
 
+File permissions which was passed to the `open` system call can be checked using `FMODE_WRITE` / `FMODE_READ` macros (bit masks) and the member of the `struct file` named `f_mode`, e.g. `filp->f_mode & FMODE_READ`.
+
 #### release
 
 This callback is issued when the last `close` is called. It means that the callback
