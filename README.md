@@ -1,7 +1,34 @@
-# ldd
+# 1. ldd
 Linux drivers course materials
 
-## Host OS dependencies
+- [1. ldd](#1-ldd)
+  - [1.1. Host OS dependencies](#11-host-os-dependencies)
+    - [1.1.1. Docker](#111-docker)
+  - [1.2. Linux module building](#12-linux-module-building)
+    - [1.2.1. Intree module building](#121-intree-module-building)
+  - [1.3. Tools](#13-tools)
+  - [1.4. Testing from a SHELL](#14-testing-from-a-shell)
+  - [1.5. Kernel APIs for drivers](#15-kernel-apis-for-drivers)
+    - [1.5.1. printk priorities](#151-printk-priorities)
+    - [1.5.2. printk format customization](#152-printk-format-customization)
+    - [1.5.3. File operations](#153-file-operations)
+      - [1.5.3.1. open](#1531-open)
+      - [1.5.3.2. release](#1532-release)
+      - [1.5.3.3. read / write](#1533-read--write)
+      - [1.5.3.4. Error handling macros](#1534-error-handling-macros)
+  - [1.6. Dynamic device file creation](#16-dynamic-device-file-creation)
+  - [1.7. Beaglebone](#17-beaglebone)
+    - [1.7.1. Toolchain](#171-toolchain)
+  - [1.8. Linux kernel build steps (on BeagleBoard example)](#18-linux-kernel-build-steps-on-beagleboard-example)
+  - [1.9. Platform Bus](#19-platform-bus)
+    - [1.9.1. Passing configuration to the kernel](#191-passing-configuration-to-the-kernel)
+    - [1.9.2. Platform devices](#192-platform-devices)
+    - [1.9.3. Platform driver](#193-platform-driver)
+      - [1.9.3.1. Registering platform driver in the kernel](#1931-registering-platform-driver-in-the-kernel)
+    - [1.9.4. Platform device to platform driver matching](#194-platform-device-to-platform-driver-matching)
+      - [1.9.4.1. Platform driver callbacks](#1941-platform-driver-callbacks)
+
+## 1.1. Host OS dependencies
 
 - build-essential
 - lzop
@@ -24,7 +51,7 @@ sudo apt-get update
 sudo apt-get install build-essential lzop u-boot-tools net-tools bison flex libssl-dev libncurses5-dev libncursesw5-dev unzip chrpath xz-utils minicom wget git-core
 ```
 
-### Docker
+### 1.1.1. Docker
 
 You can use __docker__ with all dependencies.
 
@@ -36,7 +63,7 @@ docker build --rm -t ldd:latest .
 docker run --rm -v <path_to_source_code>:/workspace -it ldd:latest
 ```
 
-## Linux module building
+## 1.2. Linux module building
 
 ```bash
 # Building module
@@ -47,7 +74,7 @@ make -C /lib/modules/5.16.0-12parrot1-amd64/build M=$PWD modules
 make -C /lib/modules/5.16.0-12parrot1-amd64/build M=$PWD clean
 ```
 
-### Intree module building
+### 1.2.1. Intree module building
 
 1. Download Linux Kernel source
 2. Create a new folder in `drivers/<type_of_driver>/<driver_name>`, e.g. `drivers/char/my_c_dev/`
@@ -68,17 +95,17 @@ config DRIVER_NAME_IN_MENUCONFIG
 endmenu
 ```
 
-## Tools
+## 1.3. Tools
 
 - `udevadm`
 
-## Testing from a SHELL
+## 1.4. Testing from a SHELL
 
 - Writing into the driver - `echo "Message" > /dev/<driver>`, e.g. `echo "Hello" > /dev/pcd`
 - Reading from the driver - `cat /dev/<driver>`, e.g. `cat /dev/pcd`
 - Copying the file into the driver - `cp <file> /dev/<driver>`, e.g. `cp /tmp/file /dev/pcd`
 
-## Kernel APIs for drivers
+## 1.5. Kernel APIs for drivers
 
 - `alloc_chrdev_region()` - create device number
 - `unregister_chrdev_region()`. This allows to allocate device and assigne a device_number to it. It is allowed to allocate multiple devices at once, e.g. `alloc_chrdev_region(&device_number, 0, NO_OF_DEVICES, "pcd_devices")` - it allocates `NO_OF_DEVICES` devices and saves first number into `device_number`. Using any other device is allowed by merging MAJOR and MINOR numbers.
@@ -87,14 +114,14 @@ endmenu
 - `class_create()`, `device_create()` - create device files
 - `class_destroy()`, `device_destroy()`
 
-### printk priorities
+### 1.5.1. printk priorities
 
 The default priorities can be setup in `menuconfig` before kernel compilation.
 In runtime it can be setup by overwriting `/proc/sys/kernel/printk` file, e.g. we can change the console log level
 to 6 by `echo 6 > /proc/sys/kernel/printk`. Message from `printk` will be printed on a console when `printk`
 priority is lower than current console log level.
 
-### printk format customization
+### 1.5.2. printk format customization
 
 User can define its own `pr_fmt` macro, e.g.
 
@@ -102,23 +129,23 @@ User can define its own `pr_fmt` macro, e.g.
 #define pr_fmt(fmt) "%s:" fmt,  __func__
 ```
 
-### File operations
+### 1.5.3. File operations
 
 These are represented by `struct file`.
 
-#### open
+#### 1.5.3.1. open
 
 This operation creates `struct file` in the kernel space for each opened file descriptor.
 Each call to `open` increments `f_count`.
 
 File permissions which was passed to the `open` system call can be checked using `FMODE_WRITE` / `FMODE_READ` macros (bit masks) and the member of the `struct file` named `f_mode`, e.g. `filp->f_mode & FMODE_READ`.
 
-#### release
+#### 1.5.3.2. release
 
 This callback is issued when the last `close` is called. It means that the callback
 is called only when `f_count` becomes 0.
 
-#### read / write
+#### 1.5.3.3. read / write
 
 In the prototype, there is an `__user` macro used. This macro is used to signal that the variable
 that it corresponds to is a user space data which kernel shouldn't trust, e.g. pointer - it shouldn't
@@ -129,14 +156,14 @@ When `__user` macro is used, it is detected by `sparse` tool (GCC doesn't detect
 - `copy_to_user` - returns 0 on success or number of bytes that could not be copied
 - `copy_from_user` - returns 0 on success or number of bytes that could not be copied
 
-#### Error handling macros
+#### 1.5.3.4. Error handling macros
 
 In `include/linux/err.h`:
 - `IS_ERR()`
 - `PTR_ERR()`
 - `ERR_PTR()`
 
-## Dynamic device file creation
+## 1.6. Dynamic device file creation
 
 There is a tool `udevd` which listens to `uevents` generated by hot plug events or kernel modules.
 When `udev` received the `uevents`, it scans the subdirectories of `/sys/class` looking for the
@@ -153,15 +180,15 @@ __Kernel functions__:
   This function also populates sysfs entry with dev file which consists of the major and minor numbers,
   separated by a `:` character.
 
-## Beaglebone
+## 1.7. Beaglebone
 
-### Toolchain
+### 1.7.1. Toolchain
 
 Downloaded either from package manager or from [arm-Developer page](https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/gnu-a/downloads).
 
 Required version: _arm-linux-gnueabihf_.
 
-## Linux kernel build steps (on BeagleBoard example)
+## 1.8. Linux kernel build steps (on BeagleBoard example)
 
 __Warning:__ These steps base on https://github.com/beagleboard/linux branch 4.14
 
@@ -211,3 +238,53 @@ __STEP 6:__
 
 sudo make ARCH=arm  modules_install
 ```
+
+## 1.9. Platform Bus
+
+This is a virtual bus implementation in a Linux terminology. A Platform Bus is used to deliver
+configuration information about a peripheral to the kernel. The devices served be Platrofm Bus
+are non-discoverable (not hot-plug).
+
+### 1.9.1. Passing configuration to the kernel
+
+There are three ways:
+- During compilation of a kernel (not recommended)
+- Dynamically - by loading kernel module manually (not recommended)
+- During kernel boot - Device Tree blob (recommended) [link](www.kernel.org/doc/Documentation/devicetree/usage-model.txt)
+
+### 1.9.2. Platform devices
+
+Devices that are connected to the Platform Bus (not supporting enumaration (dynamic discovery of devices)).
+
+### 1.9.3. Platform driver
+
+A driver who is in charge of handling a platform device.
+
+#### 1.9.3.1. Registering platform driver in the kernel
+
+Use the below C-macro:
+- `platform_driver_register` from `include/linux/platform_device.h`
+
+Platform driver is represented by `struct platform_driver`.
+
+### 1.9.4. Platform device to platform driver matching
+
+The kernel holds matching table basing on names of platform driver and platform device.
+When there is a match the `probe` function of a platform driver will be called.
+
+![Platform device to platform driver matching general](pictures/platform_bus_driver_device_matching.png "Platform device to platform driver matching general")
+![Platform device to platform driver matching example](pictures/driver_device_matching.png "Platform device to platform driver matching example")
+
+When a new driver is added and there already is a matching device in the kernel list, the Platform Bus
+matching process will be called and then `probe` function of the platform driver will be called.
+
+![Adding new platform driver example](pictures/adding_new_driver_example.png "Adding new platform driver example")
+
+#### 1.9.4.1. Platform driver callbacks
+
+`struct platform_driver`:
+- `probe` is responsible for initialization of given platform driver.
+- `remove` is responsible for unbinding and clearing the device when clased.
+- `shutdown`
+- `suspend` is responsible for putting the device into sleep mode
+- `resume` is responsible for bringing back the device from a sleep mode  
