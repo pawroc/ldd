@@ -1,0 +1,1 @@
+cmd_/home/dpawel/Projects/ldd/custom_drivers/004_pcd_platform_driver/modules.order := {   echo /home/dpawel/Projects/ldd/custom_drivers/004_pcd_platform_driver/pcd_device_setup.ko;   echo /home/dpawel/Projects/ldd/custom_drivers/004_pcd_platform_driver/pcd_platform_driver.ko; :; } | awk '!x[$$0]++' - > /home/dpawel/Projects/ldd/custom_drivers/004_pcd_platform_driver/modules.order

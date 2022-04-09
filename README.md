@@ -254,7 +254,7 @@ There are three ways:
 
 ### 1.9.2. Platform devices
 
-Devices that are connected to the Platform Bus (not supporting enumaration (dynamic discovery of devices)).
+Devices that are connected to the Platform Bus (not supporting enumaration (dynamic discovery of devices)). Platform devices are created in `/sys/devices/platform`.
 
 ### 1.9.3. Platform driver
 
