@@ -16,6 +16,9 @@ Linux drivers course materials
       - [1.5.3.2. release](#1532-release)
       - [1.5.3.3. read / write](#1533-read--write)
       - [1.5.3.4. Error handling macros](#1534-error-handling-macros)
+  - [Kernel dynamic memory allocation](#kernel-dynamic-memory-allocation)
+    - [`void* kmalloc(size_t size, gfp_t flags)`](#void-kmallocsize_t-size-gfp_t-flags)
+    - [`void kfree(const void *p)`](#void-kfreeconst-void-p)
   - [1.6. Dynamic device file creation](#16-dynamic-device-file-creation)
   - [1.7. Beaglebone](#17-beaglebone)
     - [1.7.1. Toolchain](#171-toolchain)
@@ -162,6 +165,33 @@ In `include/linux/err.h`:
 - `IS_ERR()`
 - `PTR_ERR()`
 - `ERR_PTR()`
+
+## Kernel dynamic memory allocation
+
+Kernel has its own implementations of allocation / deallocation functions - `kmalloc` and `kfree`.
+
+### `void* kmalloc(size_t size, gfp_t flags)`
+
+Defined in `include/linux/slab.h`.
+Allocated memory is contigueues and __its size is limited__. This is a good practice to use `kmalloc` for
+allocations smaller than the page size (most likely 4 kB).
+
+Important flags:
+- `GFP_KERNEL` - may block / sleep (better not to use in a time fragile code like interrupts)
+- `GFP_NOWAIT` - will not block
+- `GFP_ATOMIC` - will not block. May use emergency pools.
+- `GFP_HIGHUSER` - allocates from high memory on behalf of user
+
+`kmalloc` flavors:
+- `kmalloc_array`
+- `kcalloc`
+- `kzalloc` - allocated memory is set to zero
+- `krealloc`
+
+### `void kfree(const void *p)`
+
+`kfree` flavors:
+- `kzfree` - frees memory and set it to zero
 
 ## 1.6. Dynamic device file creation
 
