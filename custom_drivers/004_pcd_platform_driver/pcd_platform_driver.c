@@ -139,7 +139,7 @@ int pcd_platform_driver_probe(struct platform_device *pdev)
     {
         pr_err("Cannot allocate memory\n");
         ret = -ENOMEM;
-        goto dev_data_free; // is it needed since we're using devm_kzalloc ?
+        goto dev_data_free; // it's still needed
     }
 
     /* 4. Get the device number */
@@ -153,7 +153,7 @@ int pcd_platform_driver_probe(struct platform_device *pdev)
     if (ret < 0)
     {
         pr_err("Cdev add failed\n");
-        goto buffer_free; // is it needed since we're using devm_kzalloc ?
+        goto buffer_free; // it's still needed
     }
 
     /* 6. Create device file for the detected platform device */
@@ -181,12 +181,21 @@ out:
     return ret;
 }
 
+/* the below table should be null terminated */
+struct platform_device_id pcdevs_ids[] = {
+    [0] = { .name = "pcdev-A1x" },
+    [1] = { .name = "pcdev-B1x" },
+    [2] = { .name = "pcdev-C1x" },
+    { } // null terminating
+};
+
 struct platform_driver pcd_platform_driver = {
     .probe = pcd_platform_driver_probe,
     .remove = pcd_platform_driver_remove,
-    .driver = {
-        .name = "pseudo-char-device"
-    }
+    .id_table = pcdevs_ids,
+    // .driver = {
+    //     .name = "pseudo-char-device"
+    // }
 };
 
 static int __init pcd_platform_driver_init(void)

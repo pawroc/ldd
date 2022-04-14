@@ -2,39 +2,45 @@
 Linux drivers course materials
 
 - [1. ldd](#1-ldd)
-  - [1.1. Host OS dependencies](#11-host-os-dependencies)
-    - [1.1.1. Docker](#111-docker)
-  - [1.2. Linux module building](#12-linux-module-building)
-    - [1.2.1. Intree module building](#121-intree-module-building)
-  - [1.3. Tools](#13-tools)
-  - [1.4. Testing from a SHELL](#14-testing-from-a-shell)
-  - [1.5. Kernel APIs for drivers](#15-kernel-apis-for-drivers)
-    - [1.5.1. printk priorities](#151-printk-priorities)
-    - [1.5.2. printk format customization](#152-printk-format-customization)
-    - [1.5.3. File operations](#153-file-operations)
-      - [1.5.3.1. open](#1531-open)
-      - [1.5.3.2. release](#1532-release)
-      - [1.5.3.3. read / write](#1533-read--write)
-      - [1.5.3.4. Error handling macros](#1534-error-handling-macros)
-    - [1.5.4. Resource managed kernel APIs](#154-resource-managed-kernel-apis)
-      - [1.5.4.1. `devm_kmalloc`](#1541-devm_kmalloc)
-  - [1.6. Kernel dynamic memory allocation](#16-kernel-dynamic-memory-allocation)
-    - [1.6.1. `void* kmalloc(size_t size, gfp_t flags)`](#161-void-kmallocsize_t-size-gfp_t-flags)
-    - [1.6.2. `void kfree(const void *p)`](#162-void-kfreeconst-void-p)
-  - [1.7. Dynamic device file creation](#17-dynamic-device-file-creation)
-  - [1.8. Beaglebone](#18-beaglebone)
-    - [1.8.1. Toolchain](#181-toolchain)
-  - [1.9. Linux kernel build steps (on BeagleBoard example)](#19-linux-kernel-build-steps-on-beagleboard-example)
-  - [1.10. Platform Bus](#110-platform-bus)
-    - [1.10.1. Passing configuration to the kernel](#1101-passing-configuration-to-the-kernel)
-    - [1.10.2. Platform devices](#1102-platform-devices)
-    - [1.10.3. Platform driver](#1103-platform-driver)
-      - [1.10.3.1. Registering platform driver in the kernel](#11031-registering-platform-driver-in-the-kernel)
-    - [1.10.4. Platform device to platform driver matching](#1104-platform-device-to-platform-driver-matching)
-      - [1.10.4.1. Platform driver callbacks](#11041-platform-driver-callbacks)
-    - [Platform bus flow](#platform-bus-flow)
+  - [1.1. Kernel source online viewer](#11-kernel-source-online-viewer)
+  - [1.2. Host OS dependencies](#12-host-os-dependencies)
+    - [1.2.1. Docker](#121-docker)
+  - [1.3. Linux module building](#13-linux-module-building)
+    - [1.3.1. Intree module building](#131-intree-module-building)
+  - [1.4. Tools](#14-tools)
+  - [1.5. Testing from a SHELL](#15-testing-from-a-shell)
+  - [1.6. Kernel APIs for drivers](#16-kernel-apis-for-drivers)
+    - [1.6.1. printk priorities](#161-printk-priorities)
+    - [1.6.2. printk format customization](#162-printk-format-customization)
+    - [1.6.3. File operations](#163-file-operations)
+      - [1.6.3.1. open](#1631-open)
+      - [1.6.3.2. release](#1632-release)
+      - [1.6.3.3. read / write](#1633-read--write)
+      - [1.6.3.4. Error handling macros](#1634-error-handling-macros)
+    - [1.6.4. Resource managed kernel APIs](#164-resource-managed-kernel-apis)
+      - [1.6.4.1. `devm_kmalloc`](#1641-devm_kmalloc)
+  - [1.7. Kernel dynamic memory allocation](#17-kernel-dynamic-memory-allocation)
+    - [1.7.1. `void* kmalloc(size_t size, gfp_t flags)`](#171-void-kmallocsize_t-size-gfp_t-flags)
+    - [1.7.2. `void kfree(const void *p)`](#172-void-kfreeconst-void-p)
+  - [1.8. Dynamic device file creation](#18-dynamic-device-file-creation)
+  - [1.9. Beaglebone](#19-beaglebone)
+    - [1.9.1. Toolchain](#191-toolchain)
+  - [1.10. Linux kernel build steps (on BeagleBoard example)](#110-linux-kernel-build-steps-on-beagleboard-example)
+  - [1.11. Platform Bus](#111-platform-bus)
+    - [1.11.1. Passing configuration to the kernel](#1111-passing-configuration-to-the-kernel)
+    - [1.11.2. Platform devices](#1112-platform-devices)
+    - [1.11.3. Platform driver](#1113-platform-driver)
+      - [1.11.3.1. Registering platform driver in the kernel](#11131-registering-platform-driver-in-the-kernel)
+    - [1.11.4. Platform device to platform driver matching](#1114-platform-device-to-platform-driver-matching)
+      - [1.11.4.1. Platform driver callbacks](#11141-platform-driver-callbacks)
+    - [1.11.5. Platform bus flow](#1115-platform-bus-flow)
+      - [1.11.5.1. Platform matching mechanism](#11151-platform-matching-mechanism)
 
-## 1.1. Host OS dependencies
+## 1.1. Kernel source online viewer
+
+1. https://code.woboq.org/linux
+2. https://elixir.bootlin.com/linux/latest/source
+## 1.2. Host OS dependencies
 
 - build-essential
 - lzop
@@ -57,7 +63,7 @@ sudo apt-get update
 sudo apt-get install build-essential lzop u-boot-tools net-tools bison flex libssl-dev libncurses5-dev libncursesw5-dev unzip chrpath xz-utils minicom wget git-core
 ```
 
-### 1.1.1. Docker
+### 1.2.1. Docker
 
 You can use __docker__ with all dependencies.
 
@@ -69,7 +75,7 @@ docker build --rm -t ldd:latest .
 docker run --rm -v <path_to_source_code>:/workspace -it ldd:latest
 ```
 
-## 1.2. Linux module building
+## 1.3. Linux module building
 
 ```bash
 # Building module
@@ -80,7 +86,7 @@ make -C /lib/modules/5.16.0-12parrot1-amd64/build M=$PWD modules
 make -C /lib/modules/5.16.0-12parrot1-amd64/build M=$PWD clean
 ```
 
-### 1.2.1. Intree module building
+### 1.3.1. Intree module building
 
 1. Download Linux Kernel source
 2. Create a new folder in `drivers/<type_of_driver>/<driver_name>`, e.g. `drivers/char/my_c_dev/`
@@ -101,17 +107,17 @@ config DRIVER_NAME_IN_MENUCONFIG
 endmenu
 ```
 
-## 1.3. Tools
+## 1.4. Tools
 
 - `udevadm`
 
-## 1.4. Testing from a SHELL
+## 1.5. Testing from a SHELL
 
 - Writing into the driver - `echo "Message" > /dev/<driver>`, e.g. `echo "Hello" > /dev/pcd`
 - Reading from the driver - `cat /dev/<driver>`, e.g. `cat /dev/pcd`
 - Copying the file into the driver - `cp <file> /dev/<driver>`, e.g. `cp /tmp/file /dev/pcd`
 
-## 1.5. Kernel APIs for drivers
+## 1.6. Kernel APIs for drivers
 
 - `alloc_chrdev_region()` - create device number
 - `unregister_chrdev_region()`. This allows to allocate device and assigne a device_number to it. It is allowed to allocate multiple devices at once, e.g. `alloc_chrdev_region(&device_number, 0, NO_OF_DEVICES, "pcd_devices")` - it allocates `NO_OF_DEVICES` devices and saves first number into `device_number`. Using any other device is allowed by merging MAJOR and MINOR numbers.
@@ -120,14 +126,14 @@ endmenu
 - `class_create()`, `device_create()` - create device files
 - `class_destroy()`, `device_destroy()`
 
-### 1.5.1. printk priorities
+### 1.6.1. printk priorities
 
 The default priorities can be setup in `menuconfig` before kernel compilation.
 In runtime it can be setup by overwriting `/proc/sys/kernel/printk` file, e.g. we can change the console log level
 to 6 by `echo 6 > /proc/sys/kernel/printk`. Message from `printk` will be printed on a console when `printk`
 priority is lower than current console log level.
 
-### 1.5.2. printk format customization
+### 1.6.2. printk format customization
 
 User can define its own `pr_fmt` macro, e.g.
 
@@ -135,23 +141,23 @@ User can define its own `pr_fmt` macro, e.g.
 #define pr_fmt(fmt) "%s:" fmt,  __func__
 ```
 
-### 1.5.3. File operations
+### 1.6.3. File operations
 
 These are represented by `struct file`.
 
-#### 1.5.3.1. open
+#### 1.6.3.1. open
 
 This operation creates `struct file` in the kernel space for each opened file descriptor.
 Each call to `open` increments `f_count`.
 
 File permissions which was passed to the `open` system call can be checked using `FMODE_WRITE` / `FMODE_READ` macros (bit masks) and the member of the `struct file` named `f_mode`, e.g. `filp->f_mode & FMODE_READ`.
 
-#### 1.5.3.2. release
+#### 1.6.3.2. release
 
 This callback is issued when the last `close` is called. It means that the callback
 is called only when `f_count` becomes 0.
 
-#### 1.5.3.3. read / write
+#### 1.6.3.3. read / write
 
 In the prototype, there is an `__user` macro used. This macro is used to signal that the variable
 that it corresponds to is a user space data which kernel shouldn't trust, e.g. pointer - it shouldn't
@@ -162,31 +168,35 @@ When `__user` macro is used, it is detected by `sparse` tool (GCC doesn't detect
 - `copy_to_user` - returns 0 on success or number of bytes that could not be copied
 - `copy_from_user` - returns 0 on success or number of bytes that could not be copied
 
-#### 1.5.3.4. Error handling macros
+#### 1.6.3.4. Error handling macros
 
 In `include/linux/err.h`:
 - `IS_ERR()`
 - `PTR_ERR()`
 - `ERR_PTR()`
 
-### 1.5.4. Resource managed kernel APIs
+### 1.6.4. Resource managed kernel APIs
 
 Full list of this APIs may be found [here](https://www.kernel.org/doc/Documentation/driver-model/devres.txt).
 
-#### 1.5.4.1. `devm_kmalloc`
+#### 1.6.4.1. `devm_kmalloc`
 
 Allocates a resource and remembers what has been allocated. Programmer won't have to use `kfree`
 because this resource will be freed by kernel.
+
+<span style="color:red">__WARNING:__
+There is still need to use `devm_kfree` in `probe` function as the automatic free will happen only in `remove` function when a device is being removed.
+</span>
 
 ![devm_kalloc advantages](pictures/devm_kalloc.png "devm_kalloc advantages")
 ![devm_kalloc advantages](pictures/devm_kmalloc_vs_kmalloc.png "devm_kalloc usage vs kmalloc")
 ![devm_kalloc advantages](pictures/devm_kmalloc_vs_kmalloc_2.png "devm_kalloc usage vs kmalloc")
 
-## 1.6. Kernel dynamic memory allocation
+## 1.7. Kernel dynamic memory allocation
 
 Kernel has its own implementations of allocation / deallocation functions - `kmalloc` and `kfree`.
 
-### 1.6.1. `void* kmalloc(size_t size, gfp_t flags)`
+### 1.7.1. `void* kmalloc(size_t size, gfp_t flags)`
 
 Defined in `include/linux/slab.h`.
 Allocated memory is contigueues and __its size is limited__. This is a good practice to use `kmalloc` for
@@ -204,12 +214,12 @@ Important flags:
 - `kzalloc` - allocated memory is set to zero
 - `krealloc`
 
-### 1.6.2. `void kfree(const void *p)`
+### 1.7.2. `void kfree(const void *p)`
 
 `kfree` flavors:
 - `kzfree` - frees memory and set it to zero
 
-## 1.7. Dynamic device file creation
+## 1.8. Dynamic device file creation
 
 There is a tool `udevd` which listens to `uevents` generated by hot plug events or kernel modules.
 When `udev` received the `uevents`, it scans the subdirectories of `/sys/class` looking for the
@@ -226,15 +236,15 @@ __Kernel functions__:
   This function also populates sysfs entry with dev file which consists of the major and minor numbers,
   separated by a `:` character.
 
-## 1.8. Beaglebone
+## 1.9. Beaglebone
 
-### 1.8.1. Toolchain
+### 1.9.1. Toolchain
 
 Downloaded either from package manager or from [arm-Developer page](https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/gnu-a/downloads).
 
 Required version: _arm-linux-gnueabihf_.
 
-## 1.9. Linux kernel build steps (on BeagleBoard example)
+## 1.10. Linux kernel build steps (on BeagleBoard example)
 
 __Warning:__ These steps base on https://github.com/beagleboard/linux branch 4.14
 
@@ -285,28 +295,28 @@ __STEP 6:__
 sudo make ARCH=arm  modules_install
 ```
 
-## 1.10. Platform Bus
+## 1.11. Platform Bus
 
 This is a virtual bus implementation in a Linux terminology. A Platform Bus is used to deliver
 configuration information about a peripheral to the kernel. The devices served be Platrofm Bus
 are non-discoverable (not hot-plug).
 
-### 1.10.1. Passing configuration to the kernel
+### 1.11.1. Passing configuration to the kernel
 
 There are three ways:
 - During compilation of a kernel (not recommended)
 - Dynamically - by loading kernel module manually (not recommended)
 - During kernel boot - Device Tree blob (recommended) [link](www.kernel.org/doc/Documentation/devicetree/usage-model.txt)
 
-### 1.10.2. Platform devices
+### 1.11.2. Platform devices
 
 Devices that are connected to the Platform Bus (not supporting enumaration (dynamic discovery of devices)). Platform devices are created in `/sys/devices/platform`.
 
-### 1.10.3. Platform driver
+### 1.11.3. Platform driver
 
 A driver who is in charge of handling a platform device.
 
-#### 1.10.3.1. Registering platform driver in the kernel
+#### 1.11.3.1. Registering platform driver in the kernel
 
 Use the below C-macro:
 - `platform_driver_register` from `include/linux/platform_device.h`
@@ -316,7 +326,7 @@ Platform driver is represented by `struct platform_driver`.
 __Note:__ There is also `platform_add_devices` function which allows to add multiple devices at once.
 There is no `platform_remove_devices` counterpart though.
 
-### 1.10.4. Platform device to platform driver matching
+### 1.11.4. Platform device to platform driver matching
 
 The kernel holds matching table basing on names of platform driver and platform device.
 When there is a match the `probe` function of a platform driver will be called.
@@ -329,7 +339,7 @@ matching process will be called and then `probe` function of the platform driver
 
 ![Adding new platform driver example](pictures/adding_new_driver_example.png "Adding new platform driver example")
 
-#### 1.10.4.1. Platform driver callbacks
+#### 1.11.4.1. Platform driver callbacks
 
 `struct platform_driver`:
 - `probe` is responsible for initialization of given platform driver.
@@ -338,6 +348,15 @@ matching process will be called and then `probe` function of the platform driver
 - `suspend` is responsible for putting the device into sleep mode
 - `resume` is responsible for bringing back the device from a sleep mode
 
-### Platform bus flow
+### 1.11.5. Platform bus flow
 
 ![Function flow in platform bus](pictures/platform_bus_flow.jpg "Function flow in platform bus")
+
+#### 1.11.5.1. Platform matching mechanism
+
+Can be found here: `drivers/base/platform.c`. The matching order is as below:
+- `driver_override`
+- OF style matching
+- ACPI style matching
+- `id_table` matching
+- Fall-back to driver name matching
