@@ -5,7 +5,7 @@
 #define RDONLY 0x10
 #define WRONLY 0x01
 
-#define MAX_DEVICES 2
+#define MAX_DEVICES 10
 
 struct pcdev_platform_data
 {

@@ -48,7 +48,7 @@ struct platform_device platform_pcdev_3 = {
 };
 
 struct platform_device platform_pcdev_4 = {
-    .name = "pcdev",
+    .name = "pcdev-D1x",
     .id = 3,
     .dev = {
         .platform_data = &pcdev_pdata[3],

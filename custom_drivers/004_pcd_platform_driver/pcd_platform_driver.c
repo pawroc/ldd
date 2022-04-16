@@ -7,6 +7,7 @@
 #include <linux/kernel.h>
 #include <linux/platform_device.h>
 #include <linux/slab.h>
+#include <linux/mod_devicetable.h>
 #include "platform.h"
 
 #ifdef pr_fmt
@@ -186,6 +187,7 @@ struct platform_device_id pcdevs_ids[] = {
     [0] = { .name = "pcdev-A1x" },
     [1] = { .name = "pcdev-B1x" },
     [2] = { .name = "pcdev-C1x" },
+    [3] = { .name = "pcdev-D1x" },
     { } // null terminating
 };
 
@@ -193,9 +195,9 @@ struct platform_driver pcd_platform_driver = {
     .probe = pcd_platform_driver_probe,
     .remove = pcd_platform_driver_remove,
     .id_table = pcdevs_ids,
-    // .driver = {
-    //     .name = "pseudo-char-device"
-    // }
+    .driver = { /* this member is mandatory */
+        .name = "pseudo-char-device"
+    }
 };
 
 static int __init pcd_platform_driver_init(void)
