@@ -15,6 +15,37 @@
 #endif
 #define pr_fmt(fmt) "%s : " fmt,  __func__
 
+
+struct device_config
+{
+    int config_item1;
+    int config_item2;
+};
+
+enum pcdev_names
+{
+    PCDEVAX1,
+    PCDEVBX1,
+    PCDEVCX1,
+    PCDEVDX1
+};
+
+struct device_config pcdev_config[] = {
+    [PCDEVAX1] = { .config_item1 = 60, .config_item2 = 21 },
+    [PCDEVBX1] = { .config_item1 = 50, .config_item2 = 22 },
+    [PCDEVCX1] = { .config_item1 = 40, .config_item2 = 23 },
+    [PCDEVDX1] = { .config_item1 = 30, .config_item2 = 24 }
+};
+
+/* the below table should be null terminated */
+struct platform_device_id pcdevs_ids[] = {
+    [0] = { .name = "pcdev-A1x", .driver_data = PCDEVAX1 },
+    [1] = { .name = "pcdev-B1x", .driver_data = PCDEVBX1 },
+    [2] = { .name = "pcdev-C1x", .driver_data = PCDEVCX1 },
+    [3] = { .name = "pcdev-D1x", .driver_data = PCDEVDX1 },
+    { } // null terminating
+};
+
 /* Device private data structure */
 struct pcdev_private_data
 {
@@ -109,8 +140,7 @@ int pcd_platform_driver_probe(struct platform_device *pdev)
     if (!pdata)
     {
         pr_err("No platform data available\n");
-        ret = -EINVAL;
-        goto out;
+        return -EINVAL;
     }
 
     /* 2. Dynamically allocate memory for the device private data */
@@ -118,8 +148,7 @@ int pcd_platform_driver_probe(struct platform_device *pdev)
     if (!dev_data)
     {
         pr_err("Cannot allocate memory\n");
-        ret = -ENOMEM;
-        goto out;
+        return -ENOMEM;
     }
 
     /* save the device private data pointer in platform_device structure */
@@ -133,14 +162,16 @@ int pcd_platform_driver_probe(struct platform_device *pdev)
     pr_info("Device size = %d\n", dev_data->pdata.size);
     pr_info("Device permission = %d\n", dev_data->pdata.perm);
 
+    pr_info("Config item 1 = %d\n", pcdev_config[pdev->id_entry->driver_data].config_item1);
+    pr_info("Config item 2 = %d\n", pcdev_config[pdev->id_entry->driver_data].config_item2);
+
     /* 3. Dynamically allocate memory for the device buffer using size 
     information from the platform data */
     dev_data->buffer = devm_kzalloc(&pdev->dev, dev_data->pdata.size, GFP_KERNEL);
     if (!dev_data->buffer)
     {
         pr_err("Cannot allocate memory\n");
-        ret = -ENOMEM;
-        goto dev_data_free; // it's still needed
+        return -ENOMEM;
     }
 
     /* 4. Get the device number */
@@ -154,7 +185,7 @@ int pcd_platform_driver_probe(struct platform_device *pdev)
     if (ret < 0)
     {
         pr_err("Cdev add failed\n");
-        goto buffer_free; // it's still needed
+        return ret;
     }
 
     /* 6. Create device file for the detected platform device */
@@ -163,33 +194,16 @@ int pcd_platform_driver_probe(struct platform_device *pdev)
     {
         pr_err("Device create failed\n");
         ret = PTR_ERR(pcdrv_data.device_pcd);
-        goto cdev_del;
+        cdev_del(&dev_data->cdev);
+        return ret;
     }
 
     pcdrv_data.total_devices++;
 
-    pr_info("The probe was succesfull\n");
+    pr_info("Probe was succesful\n");
+
     return 0;
-
-cdev_del:
-    cdev_del(&dev_data->cdev);
-buffer_free:
-    devm_kfree(&pdev->dev, dev_data->buffer);
-dev_data_free:
-    devm_kfree(&pdev->dev, dev_data);
-out:
-    pr_err("Device probe failed\n");
-    return ret;
 }
-
-/* the below table should be null terminated */
-struct platform_device_id pcdevs_ids[] = {
-    [0] = { .name = "pcdev-A1x" },
-    [1] = { .name = "pcdev-B1x" },
-    [2] = { .name = "pcdev-C1x" },
-    [3] = { .name = "pcdev-D1x" },
-    { } // null terminating
-};
 
 struct platform_driver pcd_platform_driver = {
     .probe = pcd_platform_driver_probe,

@@ -1,5 +1,6 @@
 # 1. ldd
 Linux drivers course materials
+Course git repository: https://github.com/niekiran/linux-device-driver-1
 
 - [1. ldd](#1-ldd)
   - [1.1. Kernel source online viewer](#11-kernel-source-online-viewer)
@@ -184,10 +185,6 @@ Full list of this APIs may be found [here](https://www.kernel.org/doc/Documentat
 Allocates a resource and remembers what has been allocated. Programmer won't have to use `kfree`
 because this resource will be freed by kernel.
 
-<span style="color:red">__WARNING:__
-There is still need to use `devm_kfree` in `probe` function as the automatic free will happen only in `remove` function when a device is being removed.
-</span>
-
 ![devm_kalloc advantages](pictures/devm_kalloc.png "devm_kalloc advantages")
 ![devm_kalloc advantages](pictures/devm_kmalloc_vs_kmalloc.png "devm_kalloc usage vs kmalloc")
 ![devm_kalloc advantages](pictures/devm_kmalloc_vs_kmalloc_2.png "devm_kalloc usage vs kmalloc")
@@ -338,6 +335,10 @@ When a new driver is added and there already is a matching device in the kernel 
 matching process will be called and then `probe` function of the platform driver will be called.
 
 ![Adding new platform driver example](pictures/adding_new_driver_example.png "Adding new platform driver example")
+
+Matching methods:
+- id table matchint
+- device tree metching
 
 #### 1.11.4.1. Platform driver callbacks
 
