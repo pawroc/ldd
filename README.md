@@ -36,6 +36,18 @@ Course git repository: https://github.com/niekiran/linux-device-driver-1
       - [1.11.4.1. Platform driver callbacks](#11141-platform-driver-callbacks)
     - [1.11.5. Platform bus flow](#1115-platform-bus-flow)
       - [1.11.5.1. Platform matching mechanism](#11151-platform-matching-mechanism)
+  - [1.12. Device Tree](#112-device-tree)
+    - [1.12.1. Properties](#1121-properties)
+      - [1.12.1.1. Node name](#11211-node-name)
+      - [1.12.1.2. Compatible](#11212-compatible)
+    - [1.12.2. How to find a list of compatibilie devices to a driver](#1122-how-to-find-a-list-of-compatibilie-devices-to-a-driver)
+    - [1.12.3. Bindings](#1123-bindings)
+    - [1.12.4. Linux conventions](#1124-linux-conventions)
+    - [1.12.5. Adding own Device Tree procedure](#1125-adding-own-device-tree-procedure)
+    - [1.12.6. Usage in platform driver](#1126-usage-in-platform-driver)
+    - [Compiling Device Tree](#compiling-device-tree)
+      - [Using compiled `.dtb`](#using-compiled-dtb)
+        - [Checking if changes in `.dtb` are visible on target](#checking-if-changes-in-dtb-are-visible-on-target)
 
 ## 1.1. Kernel source online viewer
 
@@ -361,3 +373,87 @@ Can be found here: `drivers/base/platform.c`. The matching order is as below:
 - ACPI style matching
 - `id_table` matching
 - Fall-back to driver name matching
+
+## 1.12. Device Tree
+
+Resources:
+- https://www.kernel.org/doc/html/latest/devicetree/usage-model.html
+- https://www.elinux.org
+- https://www.devicetree.org/specifications/
+
+Device Trees localization in a kernel sources (arm architecture example) - `arch/arm/boot/dts`.
+
+__Typical architecture:__
+![typical modular architecture](pictures/device_tree_modular_arch.png "typical modular architecture")
+
+Device Tree has one root node and many children. The following nodes shall be present at the root of all device trees:
+- One `/CPUs` node
+- At least one `/memory` node
+
+### 1.12.1. Properties
+
+Full documentation can be found here: https://www.devicetree.org/specifications/.
+
+#### 1.12.1.1. Node name
+
+Syntax: `node-name@node-address`.
+`node-address` has to be equal to the first address specified in `reg` property.
+
+#### 1.12.1.2. Compatible
+
+The order of Compatible drivers is from the most Compatible to the most general.
+
+![Compatible property](pictures/Compatible_property_explanation.png "Compatible property")
+
+### 1.12.2. How to find a list of compatibilie devices to a driver
+
+Given an example of i2c driver we can find the list of Compatible devices: `<kernel_source_dir>/drivers/i2c/busses/i2c-omap.c`.
+Generally, the `Compatible` name from a device tree should match the driver name.
+Open the driver source code and find the `platform_driver.driver.of_match_table` member which defines compatibility table.
+
+### 1.12.3. Bindings
+
+These are documentations for Device Trees. They can be found in `Documentation/devicetree/bindings` directory of a kernel source.
+A Device Tree implementer shall deliver this documentation.
+
+### 1.12.4. Linux conventions
+
+![linux conventions](pictures/linux_conventions_for_DT.png "linux conventions")
+
+### 1.12.5. Adding own Device Tree procedure
+
+1. Download kernel source
+2. Does a driver already exist?
+  1. Yes: Find a `.dts` file you're gonna to reuse
+    1. Create own `.dtsi` file and include it into the `.dts` of the driver 
+  2. No: Create own `.dts` file
+3. Genrate `.dtb` (Device Tree Binary) file and upload it into the target device
+
+### 1.12.6. Usage in platform driver
+
+There is an `of_style_match` in `platform_match` function of a kernel source.
+Compatible devices should be passed in the `of_match_table` of a `device_driver` structure.
+
+### Compiling Device Tree
+
+After updating `.dts` and / or adding `.dtsi` into the kernel source in order to create `.dtb`
+(Device Tree Binary) one should invoke the below command from kernel source top directory:
+
+`make ARCH=<arch> CROSS_COMPILE=<cross_compiler_prefix> <dtb_filename>.dtb`, e.g. for BeagleBone Black
+`make ARCH=arm CROSS_COMPILE=arm-linux-gnueabiif- am335x-boneblack.dtb`
+
+#### Using compiled `.dtb`
+
+The file should be transfered into BOOT partition of a target system. With BeagleBone this can be done
+directly on SD card or from target device by mounting BOOT partition and copying the `.dtb` file there.
+Usefull commands to accomplish this:
+- `lsblk` - find BOOT partition
+- `mount /dev/<boot_partition> <mount_point>`
+
+##### Checking if changes in `.dtb` are visible on target
+
+Go to `/sys/devices/platform` and list a content. In our cas there should be new devices `pcdev-*` visible.
+![Checking device availability](pictures/checking_if_there_are_new_devices_in_dtb.png)
+
+One can also check a device specific properties defined in `.dtsi` file in `/sys/devices/platform/<device_name>/of_node/` directory.
+![Checking device properties](pictures/device_properties.png)
