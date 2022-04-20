@@ -45,9 +45,9 @@ Course git repository: https://github.com/niekiran/linux-device-driver-1
     - [1.12.4. Linux conventions](#1124-linux-conventions)
     - [1.12.5. Adding own Device Tree procedure](#1125-adding-own-device-tree-procedure)
     - [1.12.6. Usage in platform driver](#1126-usage-in-platform-driver)
-    - [Compiling Device Tree](#compiling-device-tree)
-      - [Using compiled `.dtb`](#using-compiled-dtb)
-        - [Checking if changes in `.dtb` are visible on target](#checking-if-changes-in-dtb-are-visible-on-target)
+    - [1.12.7. Compiling Device Tree](#1127-compiling-device-tree)
+      - [1.12.7.1. Using compiled `.dtb`](#11271-using-compiled-dtb)
+        - [1.12.7.1.1. Checking if changes in `.dtb` are visible on target](#112711-checking-if-changes-in-dtb-are-visible-on-target)
 
 ## 1.1. Kernel source online viewer
 
@@ -434,7 +434,13 @@ A Device Tree implementer shall deliver this documentation.
 There is an `of_style_match` in `platform_match` function of a kernel source.
 Compatible devices should be passed in the `of_match_table` of a `device_driver` structure.
 
-### Compiling Device Tree
+There is a helper code to work with a Device Tree in `of*.h`, e.g.:
+- `linux/of.h`
+- `linux/of_device.h`
+
+![Mapping Device Tree properties into the driver code](pictures/mapping_dts_into_driver_code.png)
+
+### 1.12.7. Compiling Device Tree
 
 After updating `.dts` and / or adding `.dtsi` into the kernel source in order to create `.dtb`
 (Device Tree Binary) one should invoke the below command from kernel source top directory:
@@ -442,7 +448,7 @@ After updating `.dts` and / or adding `.dtsi` into the kernel source in order to
 `make ARCH=<arch> CROSS_COMPILE=<cross_compiler_prefix> <dtb_filename>.dtb`, e.g. for BeagleBone Black
 `make ARCH=arm CROSS_COMPILE=arm-linux-gnueabiif- am335x-boneblack.dtb`
 
-#### Using compiled `.dtb`
+#### 1.12.7.1. Using compiled `.dtb`
 
 The file should be transfered into BOOT partition of a target system. With BeagleBone this can be done
 directly on SD card or from target device by mounting BOOT partition and copying the `.dtb` file there.
@@ -450,7 +456,7 @@ Usefull commands to accomplish this:
 - `lsblk` - find BOOT partition
 - `mount /dev/<boot_partition> <mount_point>`
 
-##### Checking if changes in `.dtb` are visible on target
+##### 1.12.7.1.1. Checking if changes in `.dtb` are visible on target
 
 Go to `/sys/devices/platform` and list a content. In our cas there should be new devices `pcdev-*` visible.
 ![Checking device availability](pictures/checking_if_there_are_new_devices_in_dtb.png)
