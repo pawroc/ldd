@@ -185,6 +185,8 @@ int pcd_platform_driver_probe(struct platform_device *pdev)
 
     struct pcdev_platform_data *pdata;
 
+    const struct of_device_id *match;
+
     struct device *dev = &pdev->dev;
 
     int driver_data;
@@ -193,13 +195,17 @@ int pcd_platform_driver_probe(struct platform_device *pdev)
 
     /* 1. Get the platform data */
     // pdata = pdev->dev.platform_data;
-    pdata = pcdev_get_platdata_from_dt(dev);
-    if (IS_ERR(pdata))
+    match = of_match_device(of_match_ptr(org_pcdev_dt_match), dev);
+    if (match)
     {
-        return PTR_ERR(pdata);
+        pdata = pcdev_get_platdata_from_dt(dev);
+        if (IS_ERR(pdata))
+        {
+            return PTR_ERR(pdata);
+        }
+        driver_data = *(int*)(match->data);
     }
-
-    if (!pdata)
+    else
     {
         /* Fallback to device_setup probe */
         pdata = (struct pcdev_platform_data*)dev_get_platdata(dev);
@@ -210,10 +216,6 @@ int pcd_platform_driver_probe(struct platform_device *pdev)
         }
 
         driver_data = pdev->id_entry->driver_data;
-    }
-    else
-    {
-        driver_data = (int) of_device_get_match_data(dev);
     }
 
     /* 2. Dynamically allocate memory for the device private data */
@@ -248,7 +250,7 @@ int pcd_platform_driver_probe(struct platform_device *pdev)
     }
 
     /* 4. Get the device number */
-    dev_data->dev_num = pcdrv_data.device_num_base + pdev->id;
+    dev_data->dev_num = pcdrv_data.device_num_base + pcdrv_data.total_devices;
 
     /* 5. Do cdev init and cdev add */
     cdev_init(&dev_data->cdev, &pcd_fops);
@@ -262,7 +264,7 @@ int pcd_platform_driver_probe(struct platform_device *pdev)
     }
 
     /* 6. Create device file for the detected platform device */
-    pcdrv_data.device_pcd = device_create(pcdrv_data.class_pcd, NULL, dev_data->dev_num, NULL, "pcdev-%d", pdev->id);
+    pcdrv_data.device_pcd = device_create(pcdrv_data.class_pcd, dev, dev_data->dev_num, NULL, "pcdev-%d", pcdrv_data.total_devices);
     if (IS_ERR(pcdrv_data.device_pcd))
     {
         dev_err(dev, "Device create failed\n");
@@ -284,7 +286,9 @@ struct platform_driver pcd_platform_driver = {
     .id_table = pcdevs_ids,
     .driver = { /* this member is mandatory */
         .name = "pseudo-char-device",
-        .of_match_table = org_pcdev_dt_match
+        /* of_match_ptr returns NULL if CONFIG_OF is disabled.
+           CONFIG_OF is enabled during kernel compilation */
+        .of_match_table = of_match_ptr(org_pcdev_dt_match)
     }
 };
 
