@@ -48,6 +48,10 @@ Course git repository: https://github.com/niekiran/linux-device-driver-1
     - [1.12.7. Compiling Device Tree](#1127-compiling-device-tree)
       - [1.12.7.1. Using compiled `.dtb`](#11271-using-compiled-dtb)
         - [1.12.7.1.1. Checking if changes in `.dtb` are visible on target](#112711-checking-if-changes-in-dtb-are-visible-on-target)
+  - [Device Tree Overlays](#device-tree-overlays)
+    - [Delivering overlays steps](#delivering-overlays-steps)
+      - [Updating u-boot manually](#updating-u-boot-manually)
+      - [Updating u-boot automatically](#updating-u-boot-automatically)
 
 ## 1.1. Kernel source online viewer
 
@@ -463,3 +467,64 @@ Go to `/sys/devices/platform` and list a content. In our cas there should be new
 
 One can also check a device specific properties defined in `.dtsi` file in `/sys/devices/platform/<device_name>/of_node/` directory.
 ![Checking device properties](pictures/device_properties.png)
+
+## Device Tree Overlays
+
+Documentation: https://www.kernel.org/doc/html/latest/devicetree/overlay-notes.html
+
+This is kind of patches for existing Device Tree Binaries (Blobs) (`.dtb`).
+
+As an example let's consider BeagleBone Black board which has it's own, board specific, Device Tree (`.dts`) file.
+Attaching LCD cape we can deliver Device Tree Overlay to patch the board specific `.dts` file as below:
+
+![Device Tree Overlay LCD example](pictures/device_tree_overlay_example_of_lcd_peripheral.png)
+
+Another example:
+![Device Tree Overlay example](pictures/device_tree_overlay_example_2.png)
+
+### Delivering overlays steps
+
+1. Create a Device Tree Overlay
+2. Compile the device tree to create `.dtbo`
+   1. This step requires `device-tree-compiler`: `sudo apt-get install device-tree-compiler` (command `dtc`)
+3. Make u-boot to load the `.dtbo` file during board startup
+
+__Compiling command example__:
+We assume that there is `PCDEV0.dts` overlay file.
+`dtc -@ -I dts -O dtb -o PCDEV0.dtbo PCDEV0.dts`
+
+#### Updating u-boot manually
+
+1. Transfer the `.dtbo` file into the target filesystem `/lib/firmware` directory.
+2. Download source code for u-boot
+3. Go to the source code top directory
+4. Run `make ARCH=arm am335x_evm_defconfig` to generate `.config` file
+   1. __Tip__: You can modify `delay in seconds before automatically booting` for a longer time in order to stop booting to configure u-boot
+   ![Delay before booting](pictures/uboot_delay_before_booting.png)
+5. Run `make ARCH=arm CROSS_COMPILE=amr-linux-gnueabihf- -j4`. This should generate `u-boot.img` and `MLO` files which should be transferred into BOOT partition of the target
+6. Transfer `MLO` and `u-boot-img` into the BOOT partition of the target
+
+While rebooting target board you should see a countdown timer from u-boot before booting the system. You can stop it in order to configure u-boot by pressing any key, example below:
+![Configuring u-boot example](pictures/uboot_startup_example.png)
+
+Manual updating of a u-boot with overlays is described in u-boot documentation under `Manually Loading and Applying Overlays` in `READMY.fdt-overlays`. Example below:
+
+![Manual loading and applying overlays in u-boot](pictures/manually_loading_overlays_in_uboot.png)
+
+Next step is to boot linux image. In order to do it, we can open `uEnv.txt` file which is located in BOOT partition, copy and execute highlighted commands:
+
+![uEnv command 1](pictures/uEnv_txt_command_1.png)
+
+Next, load linux image and boot it:
+
+![uEnv command 2](pictures/uEnv_txt_command_2.png)
+
+#### Updating u-boot automatically
+
+This can be done by doing all manual steps in `uEnv.txt` file located in BOOT partition of an SD card.
+An example how to do it is in the `custom_drivers/overlays/uEnv-dtbo.txt`.
+
+Short notes concerning the file:
+- this is a shell script (shell commands should work)
+- commands are executed using `run` command
+- command `uenvcmd` will be run automatically by u-boot
