@@ -107,3 +107,17 @@ This is represented as `struct attribute`. There are two important members:
 - mode - permission modes like, `S_IRUGO` and `S_IRUSR` which are defined in `stat.h`.
 
 `struct device_attribute` holds handlers for attribute. It contains also `struct attribute` member, thats why this structure should be used for attribute creation. There are `DEVICE_ATTR_XX` macros for device attribute creation.
+
+#### `show` callback
+
+Prototype: `ssize_t (*show)(struct device *dev, struct device_attribute *attr, char *buf)`
+
+__WARNING: `buf` is kernel space pointer, therefore its size is `PAGE_SIZE`. In ARM `PAGE_SIZE = 4096`__
+
+`show` method should be used to read a single data from a driver (less than `PAGE_SIZE`) while `read` should be used to read large amount of data to the user space.
+
+#### `store` callback
+
+Prototype: `ssize_t (*store)(struct device *dev, struct device_attribute *attr, const char *buf, size_t count)`.
+
+`buf` is user space pointer and cannot be bigger than `PAGE_SIZE`.
