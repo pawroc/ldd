@@ -96,7 +96,7 @@ Kobject attributes in sysfs:
 
 ## sysfs
 
-Enabled in kernel if compiled with `CONFIG_SYSFS`. Can be accessed by doing `mount -t sysfs syfs /sysfs`
+Enabled in kernel if compiled with `CONFIG_SYSFS`. Can be accessed by doing `mount -t sysfs sysfs /sysfs`
 
 ### sysfs attributes
 
@@ -107,6 +107,8 @@ This is represented as `struct attribute`. There are two important members:
 - mode - permission modes like, `S_IRUGO` and `S_IRUSR` which are defined in `stat.h`.
 
 `struct device_attribute` holds handlers for attribute. It contains also `struct attribute` member, thats why this structure should be used for attribute creation. There are `DEVICE_ATTR_XX` macros for device attribute creation.
+
+__WARNING__: Kernel discourages to use `snprintf` (why?) - use `scnprintf` or `sprintf` instead.
 
 #### `show` callback
 
@@ -121,3 +123,5 @@ __WARNING: `buf` is kernel space pointer, therefore its size is `PAGE_SIZE`. In 
 Prototype: `ssize_t (*store)(struct device *dev, struct device_attribute *attr, const char *buf, size_t count)`.
 
 `buf` is user space pointer and cannot be bigger than `PAGE_SIZE`.
+
+__NOTE__: there is a kernel function version to convert string to long: `kstrtol` defined in `include/linux/kernel.h`.
